@@ -14,23 +14,24 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "PROFESSORES_BERNARDO")
-public class Professor {
+@Table(name = "DISCIPLINA_BERNARDO")
+public class Disciplina {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "professor_id")
+    @Column(name = "disciplina_id")
     private Integer id;
 
     @NotBlank(message = "O campo nome deve ser preenchido")
-    @Column(name = "professor_name", nullable = false)
+    @Column(name = "disciplina_name", nullable = false)
     private String nome;
 
     @Column(name="data_atualizacao", nullable = false)
     private LocalDateTime dateTime;
 
-    @OneToOne(fetch = FetchType.LAZY, mappedBy = "titular")
-    private Disciplina disciplina;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "titular", unique = true)
+    private Professor titular;
 
     @PrePersist
     public void prePersist(){

@@ -1,38 +1,38 @@
 package com.study.resource;
 
-import com.study.dto.AlunoRequest;
-import com.study.dto.AlunoResponse;
+import com.study.dto.DisciplinaRequest;
+import com.study.dto.DisciplinaResponse;
 import com.study.dto.ErrorResponse;
-import com.study.service.AlunoService;
+import com.study.service.DisciplinaService;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 import java.util.Objects;
 
-import javax.persistence.EntityNotFoundException;
 import javax.inject.Inject;
+import javax.persistence.EntityNotFoundException;
 import javax.validation.ConstraintViolationException;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-@Path("/alunos")
+@Path("/disciplinas")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @RequiredArgsConstructor
-public class AlunoResource {
+public class DisciplinaResource {
 
     @Inject
-    AlunoService alunoService;
+    private DisciplinaService disciplinaService;
 
-    private Response listarAlunos() {
-        return Response.ok(alunoService.listarTodos()).build();
+    private Response listarDisciplinas() {
+        return Response.ok(disciplinaService).build();
     }
 
     @POST
-    public Response cadastrarAluno(final AlunoRequest aluno) {
+    public Response cadastrarDisciplina(final DisciplinaRequest disciplina) {
         try {
-            AlunoResponse response = alunoService.cadastrarAluno(aluno);
+            DisciplinaResponse response = disciplinaService.cadastrarDisciplina(disciplina);
 
             return Response
                     .status(Response.Status.CREATED)
@@ -52,7 +52,7 @@ public class AlunoResource {
     public Response buscarPeloId(@PathParam("id") int id) {
 
         try {
-            AlunoResponse response = alunoService.buscarPeloId(id);
+            DisciplinaResponse response = disciplinaService.buscarPeloId(id);
 
             return Response.ok(response).build();
         } catch (EntityNotFoundException e) {
@@ -63,29 +63,29 @@ public class AlunoResource {
     }
 
     @GET
-    public Response buscarAlunoPeloNome(@QueryParam("Nome") String nome) {
+    public Response buscarDisciplinaPeloNome(@QueryParam("Nome") String nome) {
         if (nome == null)
-            return listarAlunos();
-        List<AlunoResponse> alunosFiltrados = alunoService.buscarPeloNome(nome);
-        if (Objects.isNull(alunosFiltrados))
+            return listarDisciplinas();
+        List<DisciplinaResponse> disciplinasFiltrados = disciplinaService.buscarPeloNome(nome);
+        if (Objects.isNull(disciplinasFiltrados))
             return Response.status(Response.Status.NOT_FOUND).build();
-        return Response.ok(alunosFiltrados).build();
+        return Response.ok(disciplinasFiltrados).build();
     }
 
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("/{id}")
-    public Response atualizarAluno(@PathParam("id") Integer id, AlunoRequest aluno) {
+    public Response atualizarDisciplina(@PathParam("id") Integer id, DisciplinaRequest disciplina) {
         try {
-            AlunoResponse alunoAlterado = alunoService.atualizar(id, aluno);
-            return Response.ok(alunoAlterado).build();
+            DisciplinaResponse disciplinaAlterado = disciplinaService.atualizar(id, disciplina);
+            return Response.ok(disciplinaAlterado).build();
         } catch (ConstraintViolationException e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(ErrorResponse.createFromValidation(e))
                     .build();
         } catch (NullPointerException e) {
             return Response
                     .status(Response.Status.BAD_REQUEST)
-                    .header("O campo aluno deve ser preenchido", aluno)
+                    .header("O campo disciplina deve ser preenchido", disciplina)
                     .build();
         }
     }
@@ -93,19 +93,20 @@ public class AlunoResource {
     @DELETE
     @Path("/{id}")
     public Response deletar(@PathParam("id") Integer id) {
-        if (alunoService.deletar(id))
+        if (disciplinaService.deletar(id))
             return Response.status(Response.Status.NO_CONTENT).build();
         return Response.status(Response.Status.NOT_FOUND).build();
     }
 
     @PATCH
-    @Path("/{id}/tutor/{idProfessor}")
-    public Response atualizarTitular(@PathParam("id") int idAluno, @PathParam("idProfessor") int idProfessor) {
-        final var response = alunoService.atualizarTutor(idAluno, idProfessor);
+    @Path("/{id}/titular/{idProfessor}")
+    public Response atualizarTitular(@PathParam("id") int idDisciplina, @PathParam("idProfessor") int idProfessor) {
+        final var response = disciplinaService.atualizarTitular(idDisciplina, idProfessor);
 
         return Response
                 .status(Response.Status.CREATED)
                 .entity(response)
                 .build();
     }
+
 }

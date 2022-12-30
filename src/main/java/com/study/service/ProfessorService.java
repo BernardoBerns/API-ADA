@@ -1,45 +1,68 @@
 package com.study.service;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
-import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.RequestScoped;
+import javax.inject.Inject;
+import javax.persistence.EntityNotFoundException;
+import javax.transaction.Transactional;
+import javax.validation.Valid;
 
-import com.study.dto.ProfessorDto;
+import com.study.dto.ProfessorRequest;
+import com.study.dto.ProfessorResponse;
+import com.study.mapper.ProfessorMapper;
+import com.study.model.Professor;
+import com.study.repository.ProfessorRepository;
 
-@ApplicationScoped
+@RequestScoped
 public class ProfessorService {
 
-    private HashMap<Integer, ProfessorDto> professores = new HashMap<>();
+    @Inject
+    private ProfessorRepository repository;
 
-    public void cadastrandoProfessor(ProfessorDto professor){
-        professores.put(professor.getId(), professor);
+    @Inject
+    private ProfessorMapper mapper;
+
+    @Transactional
+    public ProfessorResponse cadastrarProfessor(@Valid ProfessorRequest professor) {
+        Objects.requireNonNull(professor, "O campo professor deve ser preenchido");
+        Professor entityProfessor = mapper.toEntity(professor);
+        repository.persistAndFlush(entityProfessor);
+        return mapper.toResponse(entityProfessor);
     }
 
-    public ProfessorDto getById(Integer id) {
-        return  professores.get(id);
+    @Transactional
+    public List<ProfessorResponse> listarTodos() {
+        return mapper.toResponse(repository.listAll());
     }
 
-    public List<ProfessorDto> listAll() {
-        return professores.values().stream().collect(Collectors.toList());
+    @Transactional
+    public ProfessorResponse buscarPeloId(int id) {
+
+        Professor entityProfessor = repository.findById(id);
+        if (Objects.isNull(entityProfessor))
+            throw new EntityNotFoundException("Professor não encontrado");
+
+        return mapper.toResponse(entityProfessor);
     }
 
-    public List<ProfessorDto> buscarPorNome(String nome) {
-        return professores.values().stream().filter(a -> a.getNome().startsWith(nome)).collect(Collectors.toList());
+    @Transactional
+    public List<ProfessorResponse> burcarPeloNome(String nome) {
+        return mapper.toResponse(repository.find("Nome LIKE ?1", "%" + nome + "%").list());
     }
 
-    public ProfessorDto alterarProfessor(ProfessorDto professor) {
-        if(Objects.isNull(professores.get(professor.getId())))
-            return null;
-        return professores.put(professor.getId(), professor);
+    @Transactional
+    public ProfessorResponse atualizar(Integer id, @Valid ProfessorRequest professor) {
+        Objects.requireNonNull(professor, "O campo professor deve ser preenchido");
+        Professor professorEntity = repository.findById(id);
+        professorEntity.setNome(professor.getNome());
+        professorEntity.setDisciplina(null);
+        return mapper.toResponse(professorEntity);
     }
 
-    public ProfessorDto deletar(Integer id) {
-        ProfessorDto professor = professores.get(id);
-        return professores.remove(professor.getId());
+    @Transactional
+    public Boolean deletar(Integer id) {
+        return repository.deleteById(id);
     }
-
-
 }

@@ -1,9 +1,9 @@
 package com.study.mapper;
 
-import com.study.dto.AlunoRequest;
-import com.study.dto.AlunoResponse;
-import com.study.dto.TutorResponse;
-import com.study.model.Aluno;
+import com.study.dto.DisciplinaRequest;
+import com.study.dto.DisciplinaResponse;
+import com.study.dto.TitularResponse;
+import com.study.model.Disciplina;
 import com.study.model.Professor;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -15,9 +15,9 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
-public class AlunoMapper {
+public class DisciplinaMapper {
 
-    public List<AlunoResponse> toResponse(List<Aluno> listOfEntities) {
+    public List<DisciplinaResponse> toResponse(List<Disciplina> listOfEntities) {
 
         if (Objects.isNull(listOfEntities)) return new ArrayList<>();
 
@@ -27,38 +27,38 @@ public class AlunoMapper {
 
     }
 
-    public AlunoResponse toResponse(Aluno entity) {
+    public DisciplinaResponse toResponse(Disciplina entity) {
 
-        Objects.requireNonNull(entity, "entity must not be null");
+        if (Objects.isNull(entity)) return null;
 
         var formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy hh:mm:ss");
 
-        var response =
-                AlunoResponse.builder()
+        DisciplinaResponse response =
+                DisciplinaResponse.builder()
                     .id(entity.getId())
-                    .name(entity.getNome())
+                    .nome(entity.getNome())
                     .dateTime(formatter.format(entity.getDateTime()))
                     .build();
 
-        if (Objects.nonNull(entity.getTutor())) {
-            response.setTutor(entity.getTutor().getNome());
+        if (Objects.nonNull(entity.getTitular())) {
+            response.setTitular(entity.getTitular().getNome());
         }
 
         return response;
     }
 
-    public Aluno toEntity(AlunoRequest alunoRequest) {
-        return new Aluno(null, alunoRequest.getNome(), null, null);
+    public Disciplina toEntity(DisciplinaRequest disciplinaRequest) {
+        return new Disciplina(null, disciplinaRequest.getNome(), null, null);
     }
 
-    public TutorResponse toResponse(Professor entity) {
+    public TitularResponse toResponse(Professor entity) {
 
-        Objects.requireNonNull(entity, "entity must not be null");
+        if (Objects.isNull(entity)) return null;
 
         var formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy hh:mm:ss");
 
-        return TutorResponse.builder()
-                .tutor(entity.getNome())
+        return TitularResponse.builder()
+                .titular(entity.getNome())
                 .atualizacao(formatter.format(LocalDateTime.now()))
                 .build();
 

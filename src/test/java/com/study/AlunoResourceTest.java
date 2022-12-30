@@ -1,20 +1,20 @@
-package com.study;
+// package com.study;
 
-import static io.restassured.RestAssured.given;
+// import static io.restassured.RestAssured.given;
 
-import org.junit.jupiter.api.Test;
+// import org.junit.jupiter.api.Test;
 
-import io.quarkus.test.junit.QuarkusTest;
+// import io.quarkus.test.junit.QuarkusTest;
 
-@QuarkusTest
-public class AlunoResourceTest {
+// @QuarkusTest
+// public class AlunoResourceTest {
 
-    // @Test
-    // public void testListarAlunosEndpoint() {
-    //     given()
-    //             .when().get("/aluno")
-    //             .then()
-    //             .statusCode(200);
-    // }
+//     // @Test
+//     // public void testListarAlunosEndpoint() {
+//     //     given()
+//     //             .when().get("/aluno")
+//     //             .then()
+//     //             .statusCode(200);
+//     // }
 
-}
+// }

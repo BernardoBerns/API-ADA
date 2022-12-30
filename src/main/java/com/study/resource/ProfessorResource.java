@@ -1,84 +1,127 @@
 package com.study.resource;
 
+import com.study.dto.DisciplinaResponse;
+import com.study.dto.ErrorResponse;
+import com.study.dto.ProfessorRequest;
+import com.study.dto.ProfessorResponse;
+import com.study.service.AlunoService;
+import com.study.service.DisciplinaService;
+import com.study.service.ProfessorService;
+import lombok.RequiredArgsConstructor;
 
-
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+
 import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.QueryParam;
+import javax.persistence.EntityNotFoundException;
+import javax.validation.ConstraintViolationException;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.study.dto.ProfessorDto;
-import com.study.service.ProfessorService;
-
-
-@Path("/professor")
+@Path("/professores")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+@RequiredArgsConstructor
 public class ProfessorResource {
 
     @Inject
-    ProfessorService  professorService;
-    
-    private final Logger log = LoggerFactory.getLogger(ProfessorResource.class);
+    ProfessorService professorService;
 
+    @Inject
+    DisciplinaService disciplinaService;
 
-    @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    public Response cadastrandoProfessor(ProfessorDto professor) {
-        log.info(String.format("professor %d Cadastrado", professor.getId()));
-        professorService.cadastrandoProfessor(professor);
-        return Response.status(Response.Status.CREATED).build();
+    @Inject
+    AlunoService alunoService;
+
+    private Response listarProfessores() {
+        return Response.ok(professorService.listarTodos()).build();
     }
 
-    public Response listarProfessors() {
-        return Response.ok(Arrays.asList(professorService.listAll())).build();
+    @POST
+    public Response cadastrarProfessor(final ProfessorRequest professor) {
+        try {
+            ProfessorResponse response = professorService.cadastrarProfessor(professor);
+
+            return Response
+                    .status(Response.Status.CREATED)
+                    .entity(response)
+                    .build();
+
+        } catch (ConstraintViolationException e) {
+            return Response
+                    .status(Response.Status.BAD_REQUEST)
+                    .entity(ErrorResponse.createFromValidation(e))
+                    .build();
+        }
     }
 
     @GET
     @Path("/{id}")
-    public Response buscarProfessor(@PathParam("id") Integer id) {
-        ProfessorDto professor = professorService.getById(id);
-        if (Objects.isNull(professor))
-            return Response.status(Response.Status.NOT_FOUND).build();
-        return Response.ok(professor).build();
+    public Response buscarPeloId(@PathParam("id") int id) {
+
+        try {
+            ProfessorResponse response = professorService.buscarPeloId(id);
+
+            return Response.ok(response).build();
+        } catch (EntityNotFoundException e) {
+            return Response
+                    .status(Response.Status.NOT_FOUND)
+                    .build();
+        }
     }
 
     @GET
-    public Response buscarProfessorPorNome(@QueryParam("prefixo") String nome) {
-        if(nome == null) return listarProfessors();
-        List<ProfessorDto> ProfessorsFiltrados = professorService.buscarPorNome(nome);
-        if (Objects.isNull(ProfessorsFiltrados))
+    public Response buscarProfessorPeloNome(@QueryParam("Nome") String nome) {
+        if (nome == null)
+            return listarProfessores();
+        List<ProfessorResponse> professorsFiltrados = professorService.burcarPeloNome(nome);
+        if (Objects.isNull(professorsFiltrados))
             return Response.status(Response.Status.NOT_FOUND).build();
-        return Response.ok(ProfessorsFiltrados).build();
+        return Response.ok(professorsFiltrados).build();
     }
 
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response alterarProfessor(ProfessorDto professor) {
-        ProfessorDto professorAlterado = professorService.alterarProfessor(professor);
-        if (Objects.isNull(professorAlterado))
-            return Response.status(Response.Status.NOT_FOUND).build();
-        return Response.ok(professor).build();
+    @Path("/{id}")
+    public Response atualizarProfessor(@PathParam("id") Integer id, ProfessorRequest professor) {
+        try {
+            ProfessorResponse professorAlterado = professorService.atualizar(id, professor);
+            return Response.ok(professorAlterado).build();
+        } catch (ConstraintViolationException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(ErrorResponse.createFromValidation(e))
+                    .build();
+        } catch (NullPointerException e) {
+            return Response
+                    .status(Response.Status.BAD_REQUEST)
+                    .header("O campo professor deve ser preenchido", professor)
+                    .build();
+        }
     }
 
     @DELETE
     @Path("/{id}")
-    public Response deletarProfessor(@PathParam("id") Integer id) {
-        ProfessorDto professor = professorService.deletar(id);
-        if (Objects.isNull(professor))
-            return Response.status(Response.Status.NOT_FOUND).build();
-        return Response.status(Response.Status.NO_CONTENT).build();
+    public Response deletar(@PathParam("id") Integer id) {
+        if (professorService.deletar(id))
+            return Response.status(Response.Status.NO_CONTENT).build();
+        return Response.status(Response.Status.NOT_FOUND).build();
     }
 
+    @GET
+    @Path("/{id}/disciplina")
+    public Response getDisciplina(@PathParam("id") int id) {
+
+        DisciplinaResponse response = disciplinaService.getDisciplinaByProfessorId(id);
+
+        return Response.ok(response).build();
+    }
+
+    @GET
+    @Path("/{id}/tutorados")
+    public Response getTutorados(@PathParam("id") int id) {
+
+        final var response = alunoService.getTutoradosByProfessorId(id);
+
+        return Response.ok(response).build();
+    }
 }

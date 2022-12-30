@@ -1,24 +1,40 @@
 package com.study.mapper;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import com.study.dto.ProfessorDtoRequest;
-import com.study.dto.ProfessorDtoResponse;
+import com.study.dto.ProfessorRequest;
+import com.study.dto.ProfessorResponse;
 import com.study.model.Professor;
 
+import javax.enterprise.context.ApplicationScoped;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+@ApplicationScoped
 public class ProfessorMapper {
-    public ProfessorDtoResponse toResponse(Professor professor) {
-        return new ProfessorDtoResponse(professor.getTitulo(), professor.getNome(), professor .getSexo());
+    public List<ProfessorResponse> toResponse(List<Professor> listOfEntities) {
+
+        if (Objects.isNull(listOfEntities)) return new ArrayList<>();
+
+        return listOfEntities.stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
     }
 
-    public List<ProfessorDtoResponse> toListResponse(List<Professor> professores) {
-        List<ProfessorDtoResponse> professoresResponse = new ArrayList<ProfessorDtoResponse>();
-        professores.stream().forEach(a -> professoresResponse.add(toResponse(a)));
-        return professoresResponse;
+    public ProfessorResponse toResponse(Professor entity) {
+
+        Objects.requireNonNull(entity, "Entity must be not null");
+
+        var formatter = DateTimeFormatter.ofPattern("dd-MM-YYYY hh:mm:ss");
+        return  ProfessorResponse.builder()
+                    .id(entity.getId())
+                    .nome(entity.getNome())
+                    .dateTime(formatter.format(entity.getDateTime()))
+                    .build();
     }
 
-    public Professor toEntity(ProfessorDtoRequest professorResquest) {
-        return new Professor(null, professorResquest.getNome(), null, null);
+    public Professor toEntity(ProfessorRequest professorRequest) {
+        return new Professor(null, professorRequest.getNome(), null, null);
     }
 }
